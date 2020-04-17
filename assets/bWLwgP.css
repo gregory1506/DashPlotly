@@ -431,3 +431,9 @@ there.
   position: relative;
   box-shadow: 2px 2px 2px lightgrey;
 }
+
+.dcc_control {
+  margin: 0;
+  padding: 5px;
+  width: calc(100%-40px);
+}
