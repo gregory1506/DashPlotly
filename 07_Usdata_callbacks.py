@@ -44,7 +44,7 @@ for country in countries:
 # df8.drop(df8[(df8["Country/Region"] == "US") & (df8["Province/State"].isnull())].index,inplace=True)
 DATES = sorted(df2.Date.unique())
 COUNTRIES = df2["Country/Region"].unique()
-
+COLORS = {"Confirmed":"red","Recovered":"green","Deaths":"blue"}
 ##############################################################
 #                                                            #
 #                   L  A  Y  O  U  T                         #
@@ -63,10 +63,12 @@ app.layout = html.Div(children=
                                         ),
                                 html.P('Case Type'),
                                 dcc.RadioItems(
+                                        id = "case-select",
                                         options=[
                                         {'label': 'Confirmed', 'value': 'Confirmed'},
                                         {'label': 'Recovered', 'value': 'Recovered'},
-                                        {'label': 'Deaths', 'value': 'Deaths'}
+                                        {'label': 'Deaths', 'value': 'Deaths'},
+                                        {'label': 'All', 'value': 'All'}
                                         ],
                                         value='Confirmed',
                                         labelStyle={'display': 'inline-block'},
@@ -139,10 +141,20 @@ def mapbox_zoom(country=None):
         Output("map-with-covid","figure"),
         [
                 Input("country-select","value"),
-                Input("date-picker", "date")
+                Input("date-picker", "date"),
+                Input("case-select","value")
         ]
 )
-def make_covid_map(country=None,date=None):
+def make_covid_map(country=None,date=None,cases=None):
+        if cases is None:
+            cases = list(("Confirmed",))
+        elif type(cases) == str:
+            if cases == "All":
+                cases = ["Confirmed","Recovered","Deaths"]
+            else:
+                cases = list((cases,))
+        else:
+            pass
         if country is None or country == []:
             country = COUNTRIES
         elif type(country) == str:
@@ -155,30 +167,34 @@ def make_covid_map(country=None,date=None):
             date = DATES[-1]
         else:
             date = np.datetime64(date)
-        df_tmp = df2[(df2.Date == date) & (df2.Confirmed > 0) & (df2["Country/Region"].isin(country))]
-        return {"data" : [go.Scattermapbox(
-                                lat=df_tmp.Lat,
-                                lon=df_tmp.Long,
-                                mode="markers",
-                                marker=go.scattermapbox.Marker(
-                                        size=df_tmp.Confirmed ** (1/3),
-                                        color="red",
-                                        opacity=0.7
-                                ),
-                                text=df_tmp["Country/Region"] + "," +df_tmp["Province/State"] + "<br>" "Confirmed : " + df_tmp["Confirmed"].astype(str),
-                                hoverinfo="text"
+        fig = go.Figure()
+        for case in cases:
+                df_tmp = df2[(df2.Date == date) & (df2[case] > 0) & (df2["Country/Region"].isin(country))]
+                fig.add_trace(go.Scattermapbox(
+                                        lat=df_tmp.Lat,
+                                        lon=df_tmp.Long,
+                                        mode="markers",
+                                        marker=go.scattermapbox.Marker(
+                                                size=df_tmp[case] ** (1/3),
+                                                color=COLORS[case],
+                                                opacity=0.7
+                                        ),
+                                        text=df_tmp["Country/Region"] + "," +df_tmp["Province/State"] + f"<br>" "{case} : " + df_tmp[case].astype(str),
+                                        hoverinfo="text",
+                                        name=case
+                                        )
                                 )
-                        ],
-                "layout" : go.Layout(
-                                hovermode="closest",
-                                autosize=True,
-                                mapbox={"accesstoken":MAPBOX_TOKEN,
-                                        "center":mapbox_center(country),
-                                        "zoom":mapbox_zoom(country)
-                                        },
-                                margin=dict(r=0,l=0,t=0,b=0,pad=0)
-                                )
-        }
+        fig.update_layout(hovermode="closest",
+                autosize=True,
+                mapbox={"accesstoken":MAPBOX_TOKEN,
+                        "center":mapbox_center(country),
+                        "zoom":mapbox_zoom(country)
+                        },
+                legend={"y":0.5},
+                showlegend=True,
+                margin=dict(r=0,l=0,t=0,b=0,pad=0)
+                )
+        return fig
 
 
 @app.callback(
