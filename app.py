@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 import requests as rq
 import json
 
-# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
 app = dash.Dash(__name__)
 app.config['suppress_callback_exceptions'] = True
 
@@ -70,108 +70,158 @@ df2["Recov"] = df2.Recovered / df2.Confirmed * 100.0
 
 DATES = sorted(df2.Date.unique())
 COUNTRIES = df2["CountryRegion"].unique()
-COLORS = {"Confirmed":"red","Recovered":"green","Deaths":"blue"}
+COLORS = {"Confirmed":"blue","Recovered":"green","Deaths":"red"}
+TOP10OPTIONS = [
+    dict(label="Confirmed cases per 100K",value="CP100K"),
+    dict(label="Total Confirmed",value="Confirmed"),
+    dict(label="Deaths cases per 100K",value="DP100K"),
+    dict(label="Mortality Rate",value="Mort"),
+    dict(label="Total Deaths",value="Deaths")
+]
 ##############################################################
 #                                                            #
 #                   L  A  Y  O  U  T                         #
 #                                                            #
 ##############################################################
-app.layout = html.Div(children=
+app.layout = html.Div(
                 [
-                        html.Div(children=html.H6(children="Covid 19 DASHBOARD : {}".format(str(DATES[-1].astype("datetime64[D]"))),
+                        html.Div(html.H6("Covid 19 DASHBOARD : {}".format(str(DATES[-1].astype("datetime64[D]"))),
                                                 style={"text-align":"center","background-color":"#7242f5"})),
-                        html.Div(children=
-                                [
-                                html.P('Countries'),
-                                dcc.Dropdown(id="country-select",
-                                        options=[{'label': i, 'value': i} for i in COUNTRIES],
-                                        multi=True
-                                        ),
-                                html.P('Case Type'),
-                                dcc.RadioItems(
-                                        id = "case-select",
-                                        options=[
-                                        {'label': 'Confirmed', 'value': 'Confirmed'},
-                                        {'label': 'Recovered', 'value': 'Recovered'},
-                                        {'label': 'Deaths', 'value': 'Deaths'},
-                                        {'label': 'All', 'value': 'All'}
-                                        ],
-                                        value='Confirmed',
-                                        labelStyle={'display': 'inline-block'},
-                                        ),
-                                html.Div(children=[
-                                         html.P("Choose Date : Default is Latest date"),
-                                        dcc.DatePickerSingle(
-                                        id="date-picker",
-                                        min_date_allowed=str(df2.Date.min())[:10],
-                                        max_date_allowed=str(df2.Date.max())[:10],
-                                        initial_visible_month=str(df2.Date.max())[:10],
-                                        date=str(df2.Date.max())[:10],
-                                        display_format="D MMMM, YYYY",
-                                        style={"border": "0px solid black"},
-                                                ),
-                                        ],
-                                        className="dcc_control"
-                                        )
-                               
-                                ],
-                                
-                                className="pretty_container two columns"
+                        html.Div([
+                            html.Div([
+                                    html.Div(
+                                            [
+                                                html.H4(id="Confirmed",style={"text-align":"center"}),
+                                                html.H6("Confirmed",style={"text-align":"center"})
+                                            ],
+                                            className="pretty_container",
+                                            style={"flex":1}),
+                                    
+                                    html.Div(
+                                            [
+                                                html.H4(id="Recovered",style={"text-align":"center"}),
+                                                html.H6("Recovered",style={"text-align":"center"})
+                                            ],
+                                            className="pretty_container",
+                                            style={"flex":1}
+                                            ),
+                                    html.Div(
+                                            [
+                                                html.H4(id="Deaths",style={"text-align":"center"}),
+                                                html.H6("Deaths",style={"text-align":"center"})
+                                            ],
+                                            className="pretty_container",
+                                            style={"flex":1}
+                                            ),
+                                    html.Div(
+                                            [
+                                                html.H4(id="Mortality",style={"text-align":"center"}),
+                                                html.H6("Mortality",style={"text-align":"center"})
+                                            ],
+                                            className="pretty_container",
+                                            style={"flex":1}
+                                            ),
+                                    ],
+                                    style={"display":"flex","flex":3}
+                                    )
+                            ],
+                            className="ten columns"                              
                         ),
                         html.Div([
-                                    html.Div([
-                                                html.Div([html.H4(id="Confirmed"),html.H6("Confirmed")],
-                                                        className="pretty_container",
-                                                        style={"flex":1}),
-                                                
-                                                html.Div([html.H4(id="Recovered"),html.H6("Recovered")],
-                                                        className="pretty_container",
-                                                        style={"flex":1}
-                                                        ),
-                                                html.Div([html.H4(id="Deaths"),html.H6("Deaths")],
-                                                        className="pretty_container",
-                                                        style={"flex":1}
-                                                        ),
-                                                html.Div([html.H4(id="Mortality"),html.H6("Mortality")],
-                                                        className="pretty_container",
-                                                        style={"flex":1}
-                                                        ),
+                                html.Div([
+                                    html.P('Countries'),
+                                    dcc.Dropdown(id="country-select",
+                                        options=[{'label': i, 'value': i} for i in COUNTRIES],
+                                        multi=True
+                                    )
+                                    ],
+                                    className="dcc_control pretty_container two columns",
+                                    style={"flex":1}
+                                ),
+                                html.Div([
+                                    html.P('Case Type'),
+                                    dcc.RadioItems(
+                                            id = "case-select",
+                                            options=[
+                                            {'label': 'Confirmed', 'value': 'Confirmed'},
+                                            {'label': 'Recovered', 'value': 'Recovered'},
+                                            {'label': 'Deaths', 'value': 'Deaths'},
+                                            {'label': 'All', 'value': 'All'}
                                             ],
-                                            style={"display":"flex","flex":3}
+                                            value='Confirmed',
+                                            labelStyle={'display': 'inline-block'},
+                                            )
+                                    ],
+                                    className="dcc_control pretty_container three columns",
+                                    style={"flex":1}
+                                )
+                                ,
+                                html.Div(children=[
+                                    html.P("Choose Date : Default is Latest date"),
+                                    dcc.DatePickerSingle(
+                                    id="date-picker",
+                                    min_date_allowed=str(df2.Date.min())[:10],
+                                    max_date_allowed=str(df2.Date.max())[:10],
+                                    initial_visible_month=str(df2.Date.max())[:10],
+                                    date=str(df2.Date.max())[:10],
+                                    display_format="D MMMM, YYYY",
+                                    style={"border": "0px solid black"},
                                             ),
-                                    html.Div(children=
-                                                [
-                                                    html.Div([
-                                                        html.H2("Cumulative Case Graph",style={"text-align":"center","font-size": "2.6rem"}),
-                                                        dcc.Graph(id="filled-line-plot")
-                                                        ],                                                        
-                                                        className="prety_container four columns"
-                                                    ),
-                                                    html.Div([
-                                                        html.H4("Case Map",style={"text-align":"center"}),
-                                                        dcc.Graph(id="map-with-covid")
-                                                        ],
-                                                        className="pretty_container six columns",
-                                                        style={"width":"54%"}
-                                                    )
-                                                    
-                                                ],
-                                                # style={"flex":1,"position":"relative"}
+                                    ],
+                                    className="dcc_control pretty_container three columns",
+                                    style={"flex":1}
+                                )
+                            ],
+                            className="ten columns",
+                            style={"display":"flex","flex":3}
+                            ),
+                        html.Hr(),
+                        html.Div(children=
+                                    [
+                                    html.Div([
+                                            dcc.Graph(id="filled-line-plot")
+                                        ],                                                        
+                                        className="five columns"
+                                    ),
+                                    html.Div([
+                                            dcc.Graph(id="map-with-covid")
+                                        ],
+                                        className="six columns"
+                                    )                                                    
+                                    ],
+                                    className="pretty_container twelve columns"
+                        ),
+                        html.Div([
+                            html.Div([
+                                html.P("Choose a metric"),
+                                dcc.Dropdown(id="top10Bar",
+                                            options=TOP10OPTIONS,
+                                            value="Confirmed"
                                             ),
-                                    html.Div(html.H2("End of page",
-                                         style={"text-align":"center","background-color":"#7242f5"}),
-                                         style={"display":"block"}
-                                        ),
-                                    html.Div(html.H2("End of page",
-                                         style={"text-align":"center","background-color":"#7242f5"}),
-                                         style={"display":"block"}
-                                        )                                  
+                                dcc.Graph(id="top10BarGraph")
                                 ],
-                        ),   
-                        
+                                className="pretty_container four columns"
+                            ),
+                            html.Div([
+                                dcc.Graph(id="statsGraph")
+                                ],
+                                className="pretty_container four columns"
+                            ),
+                            html.Div([
+                                html.P("Disclaimer : Information and displays presented here are for learning purposes only and not\
+                                    intended for official reference. Errors may Exist. Data obtained from JHC derivatives here --> \
+                                         https://github.com/datasets/covid-19.")
+                                ],
+                                className="pretty_container four columns"
+                            )
+                        ],
+                        id="tripleContainer",
+                        className="twelve columns"
+                        )
                 ],
-                # className="container"
-        )
+                className="mainContainer"
+)
+                                    
 ##############################################################
 #                                                            #
 #            H E L P E R   F U N C T I O N S                 #
@@ -189,12 +239,47 @@ def mapbox_zoom(country=None):
         return 0.8
     else:
         return 3.0
+   
 
 ##############################################################
 #                                                            #
 #            I  N  T  E  R  A  C  T  I  O  N  S              #
 #                                                            #
 ##############################################################
+@app.callback(
+        Output("top10BarGraph","figure"),
+        [
+            Input("top10Bar", "value")
+        ]
+)
+def returnBarGraph(metric="Confirmed"):
+    if metric is None:
+        metric="Confirmed"
+    tmp = df2[df2.Date == df2.Date.max()]
+    tmp = tmp.sort_values(by=[metric],na_position="first")[-10:]
+    tmp = tmp.sort_values(by=[metric],ascending=False)
+
+    tmp.Combined_Key = list(map(lambda x:x.replace("nan,",""),tmp.Combined_Key.astype(str)))
+    tmp.Combined_Key = list(map(lambda x: x.split(",")[0],tmp.Combined_Key))
+    fig = go.Figure([go.Bar(x=tmp.Combined_Key,y=tmp[metric])])
+    fig.update_layout(title="Top10 countries by {}".format(metric),title_x=0.5)
+    return fig
+
+@app.callback(
+        Output("statsGraph","figure"),
+        [
+            Input("date-picker", "date")
+        ]
+)
+def makestatsGraph(date=None):
+    fig=go.Figure()
+    tmp = df2[df2.Date == df2.Date.max()].copy()
+    fig.add_trace(go.Box(y=np.log(tmp.Mort),name="Mortality"))
+    fig.add_trace(go.Box(y=np.log(tmp.DP100K + 1),name="Deaths per 100K"))
+    fig.add_trace(go.Box(y=np.log(tmp.CP100K + 1),name="Cases per 100K"))
+    fig.update_layout(title="Box Plots",title_x=0.5,yaxis=dict(title="Logarithmic scale"))
+    return fig
+
 @app.callback(
         Output("map-with-covid","figure"),
         [
@@ -281,9 +366,34 @@ def make_line_plot(country=None,date=None):
         fig.add_trace(go.Scatter(x=tmp.index,y=tmp.Deaths,fill='tozeroy',fillcolor="red",mode='none',name="Deaths"))
         fig.add_trace(go.Scatter(x=tmp.index,y=tmp.Recovered,fill='tonexty',fillcolor="green",mode='none',name="Recovered"))
         fig.add_trace(go.Scatter(x=tmp.index,y=tmp.Confirmed,fill='tonexty',fillcolor="blue",mode='none',name="Confirmed"))
-        fig.update_layout(showlegend=True,xaxis=dict(title="Progression of Outbreak (Date)"),yaxis=dict(title="Number of cases"))
+        fig.update_layout(title="Cumulative Cases over Time",title_x=0.5,showlegend=True,xaxis=dict(title="Progression of Outbreak (Date)")\
+                          ,yaxis=dict(title="Number of cases"))
         return fig
 
+@app.callback(
+        Output("Mortality","children"),
+        [
+                Input("country-select","value"),
+                Input("date-picker", "date")
+        ]
+)
+def calc_Mortality(country=None,date=None):
+        if country is None or country == []:
+            country = COUNTRIES
+        elif type(country) == str:
+            country = list((country,))
+        elif type(country) == list:
+            pass
+        else:
+            print("Only lists or single string accepted for country")
+        if date is None:
+            date = DATES[-1]
+        else:
+            date = np.datetime64(date)
+        tmp = df2[(df2.Date == date) & (df2.Mort > 0) & (df2["CountryRegion"].isin(country))].copy()
+        b = tmp.groupby(["Date"]).agg(sum).copy()["Confirmed"][0]
+        a = tmp.groupby(["Date"]).agg(sum).copy()["Deaths"][0]
+        return str(round(a/b*100.0,3))+"%"
 
 @app.callback(
         Output("Confirmed","children"),

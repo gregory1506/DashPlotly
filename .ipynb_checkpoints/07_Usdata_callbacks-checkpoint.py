@@ -22,54 +22,28 @@ app.config['suppress_callback_exceptions'] = True
 MAPBOX_TOKEN = 'pk.eyJ1IjoiZ3JvbDIwMjAiLCJhIjoiY2s4bnVxeDk0MTI5MDNqbzJ3N212d3JvNSJ9.g2Pe3QhqbcfGOedTchNgCw'
 df = pd.read_csv("https://raw.githubusercontent.com/datasets/covid-19/master/data/time-series-19-covid-combined.csv")
 df.Date = pd.to_datetime(df.Date,format="%Y-%m-%d")
-ref = pd.read_csv("https://raw.githubusercontent.com/datasets/covid-19/master/data/reference.csv")
 df["Population"] = np.NaN
-tmp = df[df.Date == df.Date.max()].copy()[["Country/Region","Province/State"]]
-data = set()
+# df4 = pd.read_csv("https://raw.githubusercontent.com/datasets/covid-19/master/data/us_confirmed.csv")
+# df5 = pd.read_csv("https://raw.githubusercontent.com/datasets/covid-19/master/data/us_deaths.csv")
+# df4.rename(columns={"Case":"Confirmed"},inplace=True)
+# df4["Deaths"] =df5.Case
+# df4["Population"] = df5.Population
+# df4["Recovered"] = 0.0
+# df6 = df4[["Date","Lat","Long","Confirmed","Recovered","Deaths","Country/Region","Province/State","Population"]].copy()
+# df6.Date = pd.to_datetime(df6.Date, format="%Y-%m-%d")
+# df7 = pd.concat([df,df6]).copy()
+cinfo = rq.get("https://raw.githubusercontent.com/gregory1506/DashPlotly/master/test.json").json()
 df2 = df.copy()
-df2["UID"] = np.NaN
-df2["iso2"] = np.NaN
-df2["iso3"] = np.NaN
-df2["code3"] = np.NaN
-df2["FIPS"] = np.NaN
-df2["Combined_Key"] = df2["Province/State"].astype(str) + "," + df2["Country/Region"].astype(str)
-for row in tmp.itertuples():
-    if row[2] is np.NaN:
-        uid,iso2,iso3,code3,fips,pop = ref[(ref["Country_Region"] == row[1])][["UID","iso2","iso3","code3","FIPS","Population"]].values[0]
-        df2.loc[df2["Country/Region"] == row[1],["UID","iso2","iso3","code3","FIPS","Population"]] = [uid,iso2,iso3,code3,fips,pop]
-    else:
-        try:
-            uid,iso2,iso3,code3,fips,pop = ref[(ref["Country_Region"] == row[1]) & (ref["Province_State"] == row[2])][["UID","iso2","iso3","code3","FIPS","Population"]].values[0]
-            df2.loc[(df2["Country/Region"] == row[1]) & (df2["Province/State"] == row[2]),["UID","iso2","iso3","code3","FIPS","Population"]] = [uid,iso2,iso3,code3,fips,pop]
-        except:
-            continue
-df2[(df2.Population.isnull()) & (df2.Date == df2.Date.max())]
-df2.drop(df2[(df2["Country/Region"] == "Diamond Princess") | (df2["Province/State"] == "Diamond Princess") ].index,axis=0,inplace=True)
-df2.drop(df2[(df2["Country/Region"] == "MS Zaandam") | (df2["Province/State"] == "Grand Princess") ].index,axis=0,inplace=True)
-usc = pd.read_csv("https://raw.githubusercontent.com/datasets/covid-19/master/data/us_confirmed.csv")
-usd = pd.read_csv("https://raw.githubusercontent.com/datasets/covid-19/master/data/us_deaths.csv")
-usc["Population"] = usd.Population
-usc.rename(columns={"Case":"Confirmed"},inplace=True)
-usc["Deaths"] = usd.Case
-usc["Recovered"] = 0.0
-usc.Date = pd.to_datetime(usc.Date, format="%Y-%m-%d")
-usc.drop(["Admin2"],axis=1,inplace=True)
-df2.rename(columns={"Country/Region":"CountryRegion","Province/State":"ProvinceState"},inplace=True)
-usc.rename(columns={"Country/Region":"CountryRegion","Province/State":"ProvinceState"},inplace=True)
-del df
-del usd
-df3 = pd.concat([df2,usc]).copy()
-df3.drop(df3[df3.Population == 0.0].index,inplace=True)
-df3.drop(df3[(df3.CountryRegion == "US") & (df3.ProvinceState.isnull())].index,inplace=True)
-del usc
-df2["DP100K"] = round(((100000 / df2.Population) * df2.Deaths),3)
-df2["CP100K"] = round(((100000 / df2.Population) * df2.Confirmed),3)
-df2["RP100K"] = round(((100000 / df2.Population) * df2.Recovered),3)
-df2["Mort"] = df2.Deaths / df2.Confirmed * 100.0
-df2["Recov"] = df2.Recovered / df2.Confirmed * 100.0
-
+df2["Region"] = np.nan
+df2["Sub-Region"] = np.nan
+df2["ISO3"] = np.nan
+countries = df["Country/Region"].unique()
+for country in countries:
+    if country in cinfo:
+        df2.loc[df2["Country/Region"] == country,["Population","Region","Sub-Region","ISO3"]] = cinfo[country][:]
+# df8.drop(df8[(df8["Country/Region"] == "US") & (df8["Province/State"].isnull())].index,inplace=True)
 DATES = sorted(df2.Date.unique())
-COUNTRIES = df2["CountryRegion"].unique()
+COUNTRIES = df2["Country/Region"].unique()
 COLORS = {"Confirmed":"red","Recovered":"green","Deaths":"blue"}
 ##############################################################
 #                                                            #
@@ -78,13 +52,13 @@ COLORS = {"Confirmed":"red","Recovered":"green","Deaths":"blue"}
 ##############################################################
 app.layout = html.Div(children=
                 [
-                        html.Div(children=html.H6(children="Covid 19 DASHBOARD : {}".format(str(DATES[-1].astype("datetime64[D]"))),
+                        html.Div(children=html.H2(children="Covid 19 DASHBOARD : {}".format(str(DATES[-1].astype("datetime64[D]"))),
                                                 style={"text-align":"center","background-color":"#7242f5"})),
                         html.Div(children=
                                 [
                                 html.P('Countries'),
                                 dcc.Dropdown(id="country-select",
-                                        options=[{'label': i, 'value': i} for i in COUNTRIES],
+                                        options=[{'label': i, 'value': i} for i in df["Country/Region"].unique()],
                                         multi=True
                                         ),
                                 html.P('Case Type'),
@@ -112,63 +86,31 @@ app.layout = html.Div(children=
                                                 ),
                                         ],
                                         className="dcc_control"
-                                        )
+                                )
                                
                                 ],
                                 
-                                className="pretty_container two columns"
+                                className="two columns"
                         ),
-                        html.Div([
-                                    html.Div([
-                                                html.Div([html.H4(id="Confirmed"),html.H6("Confirmed")],
-                                                        className="pretty_container",
-                                                        style={"flex":1}),
-                                                
-                                                html.Div([html.H4(id="Recovered"),html.H6("Recovered")],
-                                                        className="pretty_container",
-                                                        style={"flex":1}
-                                                        ),
-                                                html.Div([html.H4(id="Deaths"),html.H6("Deaths")],
-                                                        className="pretty_container",
-                                                        style={"flex":1}
-                                                        ),
-                                                html.Div([html.H4(id="Mortality"),html.H6("Mortality")],
-                                                        className="pretty_container",
-                                                        style={"flex":1}
-                                                        ),
-                                            ],
-                                            style={"display":"flex","flex":3}
-                                            ),
-                                    html.Div(children=
-                                                [
-                                                    html.Div([
-                                                        html.H2("Cumulative Case Graph",style={"text-align":"center","font-size": "2.6rem"}),
-                                                        dcc.Graph(id="filled-line-plot")
-                                                        ],                                                        
-                                                        className="prety_container four columns"
-                                                    ),
-                                                    html.Div([
-                                                        html.H4("Case Map",style={"text-align":"center"}),
-                                                        dcc.Graph(id="map-with-covid")
-                                                        ],
-                                                        className="pretty_container six columns",
-                                                        style={"width":"54%"}
-                                                    )
-                                                    
-                                                ],
-                                                # style={"flex":1,"position":"relative"}
-                                            ),
-                                    html.Div(html.H2("End of page",
-                                         style={"text-align":"center","background-color":"#7242f5"}),
-                                         style={"display":"block"}
-                                        ),
-                                    html.Div(html.H2("End of page",
-                                         style={"text-align":"center","background-color":"#7242f5"}),
-                                         style={"display":"block"}
-                                        )                                  
+                        html.Div(children=
+                                [
+                                dcc.Graph(id="map-with-covid"),
+                                dcc.Graph(id="filled-line-plot")
                                 ],
-                        ),   
-                        
+                                className="seven columns"
+                        ),
+                        html.Div(children=
+                                [
+                                html.Div([html.H4(id="Confirmed"),html.P("Confirmed")],
+                                        style={"background-color":"#4269f5","text-align":"center"}),
+                                html.Div([html.H4(id="Recovered"),html.P("Recovered")],
+                                        style={"background-color":"green","text-align":"center"}),
+                                html.Div([html.H4(id="Deaths"),html.P("Deaths")],
+                                        style={"background-color":"red","text-align":"center"})
+                                ],
+                                className="two columns"
+                        ),     
+                        # html.Div(html.H2("End of page",style={"text-align":"center","background-color":"#7242f5"}))
                 ],
                 # className="container"
         )
@@ -179,14 +121,14 @@ app.layout = html.Div(children=
 ##############################################################
 
 def mapbox_center(country=None):
-    df_tmp = df2[df2["CountryRegion"].isin(country)]
+    df_tmp = df2[df2["Country/Region"].isin(country)]
     lat = round(df_tmp.Lat.mean(),3)
     lon = round(df_tmp.Long.mean(),3)
     return dict(lat=lat,lon=lon)
 
 def mapbox_zoom(country=None):
     if set(country) == set(COUNTRIES):
-        return 0.8
+        return 1.07
     else:
         return 3.0
 
@@ -227,7 +169,7 @@ def make_covid_map(country=None,date=None,cases=None):
             date = np.datetime64(date)
         fig = go.Figure()
         for case in cases:
-                df_tmp = df3[(df3.Date == date) & (df3[case] > 0) & (df3["CountryRegion"].isin(country))]
+                df_tmp = df2[(df2.Date == date) & (df2[case] > 0) & (df2["Country/Region"].isin(country))]
                 fig.add_trace(go.Scattermapbox(
                                         lat=df_tmp.Lat,
                                         lon=df_tmp.Long,
@@ -237,7 +179,7 @@ def make_covid_map(country=None,date=None,cases=None):
                                                 color=COLORS[case],
                                                 opacity=0.7
                                         ),
-                                        text=df_tmp["CountryRegion"] + "," +df_tmp["ProvinceState"] + "<br>" "{} : ".format(case) + df_tmp[case].astype(str),
+                                        text=df_tmp["Country/Region"] + "," +df_tmp["Province/State"] + f"<br>" "{case} : " + df_tmp[case].astype(str),
                                         hoverinfo="text",
                                         name=case
                                         )
@@ -275,7 +217,7 @@ def make_line_plot(country=None,date=None):
             date = DATES[-1]
         else:
             date = np.datetime64(date)
-        tmp = df2[(df2.Date.isin(DATES[:DATES.index(date)])) & (df2.Confirmed > 0) & (df2["CountryRegion"].isin(country))]
+        tmp = df2[(df2.Date.isin(DATES[:DATES.index(date)])) & (df2.Confirmed > 0) & (df2["Country/Region"].isin(country))]
         tmp = tmp.groupby(["Date"]).agg(sum).copy()
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=tmp.index,y=tmp.Deaths,fill='tozeroy',fillcolor="red",mode='none',name="Deaths"))
@@ -305,7 +247,7 @@ def calc_Confirmed(country=None,date=None):
             date = DATES[-1]
         else:
             date = np.datetime64(date)
-        tmp = df2[(df2.Date == date) & (df2.Confirmed > 0) & (df2["CountryRegion"].isin(country))].copy()
+        tmp = df2[(df2.Date == date) & (df2.Confirmed > 0) & (df2["Country/Region"].isin(country))].copy()
         return str(tmp.groupby(["Date"]).agg(sum).copy()["Confirmed"][0])
 
 @app.callback(
@@ -328,7 +270,7 @@ def calc_Recovered(country=None,date=None):
             date = DATES[-1]
         else:
             date = np.datetime64(date)
-        tmp = df2[(df2.Date == date) & (df2.Recovered > 0) & (df2["CountryRegion"].isin(country))].copy()
+        tmp = df2[(df2.Date == date) & (df2.Recovered > 0) & (df2["Country/Region"].isin(country))].copy()
         return str(tmp.groupby(["Date"]).agg(sum).copy()["Recovered"][0])
 
 @app.callback(
@@ -351,7 +293,7 @@ def calc_Deaths(country=None,date=None):
             date = DATES[-1]
         else:
             date = np.datetime64(date)
-        tmp = df2[(df2.Date == date) & (df2.Deaths > 0) & (df2["CountryRegion"].isin(country))].copy()
+        tmp = df2[(df2.Date == date) & (df2.Deaths > 0) & (df2["Country/Region"].isin(country))].copy()
         return str(tmp.groupby(["Date"]).agg(sum).copy()["Deaths"][0])
 ##############################################################
 #                                                            #

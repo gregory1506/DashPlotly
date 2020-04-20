@@ -1,6 +1,5 @@
 /* Table of contents
 ––––––––––––––––––––––––––––––––––––––––––––––––––
-- Plotly.js
 - Grid
 - Base Styles
 - Typography
@@ -15,22 +14,6 @@
 - Clearing
 - Media Queries
 */
-
-/* PLotly.js 
-–––––––––––––––––––––––––––––––––––––––––––––––––– */
-/* plotly.js's modebar's z-index is 1001 by default
- * https://github.com/plotly/plotly.js/blob/7e4d8ab164258f6bd48be56589dacd9bdd7fded2/src/css/_modebar.scss#L5
- * In case a dropdown is above the graph, the dropdown's options
- * will be rendered below the modebar
- * Increase the select option's z-index
- */
-
-/* This was actually not quite right -
-   dropdowns were overlapping each other (edited October 26)
-
-.Select {
-    z-index: 1002;
-}*/
 
 
 /* Grid
@@ -61,23 +44,28 @@
     width: 80%; }
   .column,
   .columns {
-    margin-left: 4%; }
-  .column:first-child,
+    margin-left: 0.5%; }
+  /* .column:first-child,
   .columns:first-child {
     margin-left: 0; }
+  .column:last-child,
+  .columns:last-child {
+    margin-left: 0; } */
 
   .one.column,
-  .one.columns                    { width: 4.66666666667%; }
-  .two.columns                    { width: 13.3333333333%; }
+  .one.columns                    { width: 8%;             }
+  .two.columns                    { width: 16.25%;         }
   .three.columns                  { width: 22%;            }
-  .four.columns                   { width: 30.6666666667%; }
-  .five.columns                   { width: 39.3333333333%; }
-  .six.columns                    { width: 48%;            }
-  .seven.columns                  { width: 56.6666666667%; }
-  .eight.columns                  { width: 65.3333333333%; }
+  .threept5.columns               { width: 28%;            }
+  .four.columns                   { width: calc(100% / 3);            }
+  .five.columns                   { width: calc(100% * 5/12); }
+  .six.columns                    { width: 49.75%;          }
+  .seven.columns                  { width: calc(100% * 7/12); }
+  .eight.columns                  { width: 66.5%;          }
   .nine.columns                   { width: 74.0%;          }
+  .ninept5.columns                { width: 79.0%;          }
   .ten.columns                    { width: 82.6666666667%; }
-  .eleven.columns                 { width: 91.3333333333%; }
+  .eleven.columns                 { width: 91.5%; }
   .twelve.columns                 { width: 100%; margin-left: 0; }
 
   .one-third.column               { width: 30.6666666667%; }
@@ -132,8 +120,122 @@ body {
   line-height: 1.6;
   font-weight: 400;
   font-family: "Open Sans", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color: rgb(50, 50, 50); }
+  color: rgb(50, 50, 50);
+  background-color: #F2F2F2;
+  margin: 1%;
+  overflow: auto;
+}
+.pretty_container {
+  border-radius: 5px;
+  background-color: #F9F9F9;
+  margin: 10px;
+  padding: 15px;
+  position: relative;
+  box-shadow: 2px 2px 2px lightgrey;
+}
 
+.bare_container {
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+}
+
+.data_text {
+    font-size;
+}
+
+.dcc_control {
+  margin: 0;
+  padding: 5px;
+  width: calc(100%-40px);
+}
+
+.control_label {
+  margin: 0;
+  padding: 10px;
+  padding-bottom: 0px;
+  margin-bottom: 0px;
+  width: calc(100%-40px);
+}
+
+.rc-slider {
+  margin-left: 0px;
+  padding-left: 0px;
+}
+
+.row {
+  display: flex;
+}
+
+#individual_graph,
+#aggregate_graph {
+  width: calc(100% - 30px);
+  position: absolute;
+}
+
+#count_graph {
+  position: absolute;
+  height: calc(100% - 30px);
+  width: calc(100% - 30px);
+}
+
+
+#countGraphContainer {
+  flex: 5;
+  position: relative;
+}
+
+#header {
+  align-items: center;
+}
+
+#learnMore {
+  align: center;
+  justify: middle;
+  height: 100%;
+}
+
+#rightCol {
+  display: flex;
+  flex-direction: column;
+}
+
+#wells {
+  flex: 1;
+}
+
+#gas {
+  margin-right: 0;
+  padding-right: 0;
+  flex: 1;
+}
+
+#aggregate_data {
+  align-items: center;
+}
+
+#oil {
+  margin-right: 0;
+  padding-right: 0;
+  margin-left: 0;
+  padding-left: 0;
+  flex:1;
+}
+
+#water {
+  margin-left: 0;
+  padding-left: 0;
+  flex: 1;
+}
+
+#tripleContainer {
+  display: flex;
+  flex: 3;
+}
+
+#mainContainer {
+  display: flex;
+  flex-direction: column;
+}
 
 /* Typography
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -142,11 +244,12 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 0;
   font-weight: 300; }
 h1 { font-size: 4.5rem; line-height: 1.2;  letter-spacing: -.1rem; margin-bottom: 2rem; }
-h2 { font-size: 3.6rem; line-height: 1.25; letter-spacing: -.1rem; margin-bottom: 1.8rem; margin-top: 1.8rem;}
+h2 { font-size: 3.6rem; line-height: 1.25; letter-spacing: -.1rem; margin-bottom: 0px; margin-top: 1rem;}
 h3 { font-size: 3.0rem; line-height: 1.3;  letter-spacing: -.1rem; margin-bottom: 1.5rem; margin-top: 1.5rem;}
-h4 { font-size: 2.6rem; line-height: 1.35; letter-spacing: -.08rem; margin-bottom: 1.2rem; margin-top: 1.2rem;}
+h4 { font-size: 2.6rem; line-height: 1.35; letter-spacing: -.08rem; margin-bottom: 1.2rem; margin-top: 0px; margin-left: 1rem}
 h5 { font-size: 2.2rem; line-height: 1.5;  letter-spacing: -.05rem; margin-bottom: 0.6rem; margin-top: 0.6rem;}
 h6 { font-size: 2.0rem; line-height: 1.6;  letter-spacing: 0; margin-bottom: 0.75rem; margin-top: 0.75rem;}
+
 
 p {
   margin-top: 0; }
@@ -166,9 +269,7 @@ blockquote {
 /* Links
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 a {
-  color: #1EAEDB; 
-  text-decoration: underline;
-  cursor: pointer;}
+  color: #1EAEDB; }
 a:hover {
   color: #0FA0CE; }
 
@@ -250,7 +351,7 @@ select {
   border: 1px solid #D1D1D1;
   border-radius: 4px;
   box-shadow: none;
-  box-sizing: border-box; 
+  box-sizing: border-box;
   font-family: inherit;
   font-size: inherit; /*https://stackoverflow.com/questions/6080413/why-doesnt-input-inherit-the-font-from-body*/}
 /* Removes awkward default styles on some inputs for iOS */
@@ -317,19 +418,16 @@ li {
 
 /* Tables
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
-table {
-  border-collapse: collapse;
-}
-th:not(.CalendarDay),
-td:not(.CalendarDay) {
+th,
+td {
   padding: 12px 15px;
   text-align: left;
   border-bottom: 1px solid #E1E1E1; }
-th:first-child:not(.CalendarDay),
-td:first-child:not(.CalendarDay) {
+th:first-child,
+td:first-child {
   padding-left: 0; }
-th:last-child:not(.CalendarDay),
-td:last-child:not(.CalendarDay) {
+th:last-child,
+td:last-child {
   padding-right: 0; }
 
 
@@ -399,6 +497,7 @@ there.
 */
 
 
+
 /* Larger than mobile */
 @media (min-width: 400px) {}
 
@@ -413,27 +512,3 @@ there.
 
 /* Larger than Desktop HD */
 @media (min-width: 1200px) {}
-
-.mini_container {
-  border-radius: 5px;
-  background-color: #f9f9f9;
-  margin: 10px;
-  padding: 15px;
-  position: relative;
-  box-shadow: 2px 2px 2px lightgrey;
-}
-
-.pretty_container {
-  border-radius: 5px;
-  background-color: #f9f9f9;
-  margin: 10px;
-  padding: 15px;
-  position: relative;
-  box-shadow: 2px 2px 2px lightgrey;
-}
-
-.dcc_control {
-  margin: 0;
-  padding: 5px;
-  width: calc(100%-40px);
-}
